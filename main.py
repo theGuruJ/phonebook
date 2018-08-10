@@ -1,7 +1,17 @@
+from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 from model import PhoneBook as PhoneBook
 import webapp2
 import json
+
+
+class EnqueueTaskHandler(webapp2.RequestHandler):
+    def post(self):
+        amount = int(self.request.get('amount'))
+        print "request received - 2 "
+        task = taskqueue.add(url='/update_counter', target='worker', params={'amount': amount})
+        self.response.write(
+            'Task {} enqueued, ETA {}.'.format(task.name, task.eta))
 
 
 class CreateEntry(webapp2.RequestHandler):
@@ -121,5 +131,7 @@ application = webapp2.WSGIApplication([
     webapp2.Route('/create_child_entry/', CreateChildEntry),
     webapp2.Route('/query_db_child_entries/', QueryDBChildEntries),
     webapp2.Route('/create_entry_exp/', CreateEntryExp),
+    webapp2.Route('/enqueue', EnqueueTaskHandler),
+
 ], debug=True)
 
