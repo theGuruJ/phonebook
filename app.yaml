@@ -2,6 +2,12 @@ runtime: python27
 api_version: 1
 threadsafe: true
 
+inbound_services:
+- mail
+# [END mail_service]
+- mail_bounce
+# [END bounce_service]
+
 handlers:
 - url: /stylesheets
   static_dir: stylesheets
@@ -12,6 +18,11 @@ handlers:
 - url: /img
   static_dir: img
 
+- url: /_ah/bounce/
+  script: handle_incoming_email.app
+
+- url: /_ah/mail/.+
+  script: handle_incoming_email.app
+
 - url: /.*
   script: main.application
-

@@ -1,9 +1,24 @@
 from google.appengine.api import taskqueue
+from google.appengine.api import mail
 from google.appengine.ext import ndb
+
 from model import PhoneBook as PhoneBook
 import webapp2
 import json
 
+def send_approved_mail(receiver_address):
+    # [START send_mail]
+    sender_address = "jagjot.anand@anywhere.co"
+    mail.send_mail(sender=sender_address,
+                   to=receiver_address,
+                   subject="Your contact has been added to the Phone Book app",
+                   body="""Dear User:
+Your contact has been created on the Phone Book application. 
+You do not need to take any action in this regard. 
+This is only for your information.
+The Phonebook API Team :P
+""")
+    # [END send_mail]
 
 class EnqueueTaskHandler(webapp2.RequestHandler):
     def post(self):
@@ -20,6 +35,8 @@ class CreateEntry(webapp2.RequestHandler):
         input_data = json.loads(self.request.body)
         key_from_put = PhoneBook.create_entry(input_data)
         output = PhoneBook.get_entity_by_key(key_from_put)
+        if (input_data.get('phonebook')).get('email')is not None:
+            send_approved_mail((input_data.get('phonebook')).get('email'))
         self.response.write(output)
 
 
@@ -111,8 +128,8 @@ class QueryDBProjection(webapp2.RequestHandler):
 
 
 class QueryConstructor(webapp2.RequestHandler):
-    def get(self, kind):
-        query_result = PhoneBook.query_constructor(kind)
+    def get(self, kind, prop, value):
+        query_result = PhoneBook.query_constructor(kind, prop, value)
         self.response.write(query_result)
 
 
@@ -126,7 +143,7 @@ application = webapp2.WSGIApplication([
     webapp2.Route(r'/get_entry/<name:\S+>/<email:\S+>', GetEntryQuery),
     webapp2.Route('/get_all_entries', GetAllEntries),
     # webapp2.Route('/query_db/', QueryDB),
-    webapp2.Route('/query_db_c/<kind:\S+>', QueryConstructor),
+    webapp2.Route('/query_db_c/<kind:\S+>/<prop:\S+>/<value:\S+>/', QueryConstructor),
     webapp2.Route('/query_db_projection/', QueryDBProjection),
     webapp2.Route('/create_child_entry/', CreateChildEntry),
     webapp2.Route('/query_db_child_entries/', QueryDBChildEntries),

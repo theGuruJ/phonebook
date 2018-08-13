@@ -354,9 +354,8 @@ class PhoneBook(ndb.Model):
         return entry_retrieved_by_key.put().id()
 
     @staticmethod
-    def query_constructor(kind_str):
-        query = ndb.Query(kind=kind_str)
-        query.filter.Node('pin', '<', '600000')
+    def query_constructor(kind_str, prop, value):
+        query = ndb.Query(kind=kind_str, filters=ndb.GenericProperty(prop) == value)
         print query
         query_result = query.fetch()
         result_object = {}
